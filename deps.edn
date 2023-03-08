@@ -1,0 +1,7 @@
+{:deps
+ {org.clojure/clojure {:mvn/version "1.11.1"}
+  org.clojure/tools.deps.alpha {:mvn/version "0.14.1212"}
+  com.xtdb/xtdb-core {:mvn/version "dev-SNAPSHOT"}}
+ :mvn/repos
+ {"snapshots" {:url "https://s01.oss.sonatype.org/content/repositories/snapshots"}}
+ :paths ["src"]}
