@@ -206,3 +206,68 @@
     ["Lethal Weapon 3" 6.6]
     ["RoboCop" 7.5]])
 ;; => #{["Mad Max" 7.0] ["Mad Max 2" 7.6] ["Lethal Weapon" 7.6] ["Lethal Weapon 3" 6.6] ["Lethal Weapon 2" 7.1] ["Braveheart" 8.4] ["Mad Max Beyond Thunderdome" 6.1]}
+
+;;; predicates
+
+;; find all movies released before 1984
+(q '{:find [title]
+     :where [[m :movie/title title]
+             [m :movie/year year]
+             [(< year 1984)]]})
+;; => #{["First Blood"] ["Alien"] ["Mad Max 2"] ["Mad Max"]}
+
+;; another predicate
+(q '{:find [name]
+     :where [[p :person/name name]
+             [(clojure.string/starts-with? name "M")]]})
+;; => #{["Mark L. Lester"] ["Michael Preston"] ["Michael Biehn"] ["Marc de Jonge"] ["Mel Gibson"]}
+
+;; exercise 1: find movies older than a certain year
+(q '{:find [title]
+     :in [year]
+     :where [[m :movie/year movie-year]
+             [m :movie/title title]
+             [(<= movie-year year)]]}
+   1984)
+;; => #{["First Blood"] ["The Terminator"] ["Alien"] ["Mad Max 2"] ["Mad Max"]}
+
+;; exercise 2: find actor older than dany glover
+(q '{:find [actor]
+     :where [[p1 :person/name "Danny Glover"]
+             [p1 :person/born glover-birth]
+             [p2 :person/born other-birth]
+             [m :movie/cast p2]
+             [(< other-birth glover-birth)] ;; compare birth of date
+             [p2 :person/name actor]]})
+;; => #{["Joe Pesci"] ["Brian Dennehy"] ["Tom Skerritt"] ["Alan Rickman"] ["Tina Turner"] ["Bruce Spence"] ["Michael Preston"] ["Charles Napier"] ["Gary Busey"] ["Sylvester Stallone"] ["Ronny Cox"] ["Richard Crenna"]}
+
+(q '{:find [title]
+     :in [year rating [[title r]]]
+     :where [[m1 :movie/year y]
+             [(>= y year)]
+             [m1 :movie/title title]
+             [(< rating r)]]}
+   1990
+   8.0
+   [["Die Hard" 8.3]
+    ["Alien" 8.5]
+    ["Lethal Weapon" 7.6]
+    ["Commando" 6.5]
+    ["Mad Max Beyond Thunderdome" 6.1]
+    ["Mad Max 2" 7.6]
+    ["Rambo: First Blood Part II" 6.2]
+    ["Braveheart" 8.4]
+    ["Terminator 2: Judgment Day" 8.6]
+    ["Predator 2" 6.1]
+    ["First Blood" 7.6]
+    ["Aliens" 8.5]
+    ["Terminator 3: Rise of the Machines" 6.4]
+    ["Rambo III" 5.4]
+    ["Mad Max" 7.0]
+    ["The Terminator" 8.1]
+    ["Lethal Weapon 2" 7.1]
+    ["Predator" 7.8]
+    ["Lethal Weapon 3" 6.6]
+    ["RoboCop" 7.5]])
+;; => #{["Terminator 2: Judgment Day"] ["Braveheart"]}
+;; => 
