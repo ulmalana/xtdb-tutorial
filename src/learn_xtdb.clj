@@ -270,4 +270,85 @@
     ["Lethal Weapon 3" 6.6]
     ["RoboCop" 7.5]])
 ;; => #{["Terminator 2: Judgment Day"] ["Braveheart"]}
-;; => 
+
+;;; transformation functions
+(defn age [^java.util.Date birthday ^java.util.Date today]
+  (quot (- (.getTime today)
+           (.getTime birthday))
+        (* 1000 60 60 24 365)))
+
+;; find tina turner age
+(q '{:find [age]
+     :in [name today]
+     :where [[p :person/name name]
+             [p :person/born born]
+             [(learn-xtdb/age born today) age]]}
+   "Tina Turner"
+   (java.util.Date.))
+;; => #{[83]}
+
+;; exercise 1: find people by age
+(q '{:find [name]
+     :in [age today]
+     :where [[p :person/name name]
+             [p :person/born born]
+             [(learn-xtdb/age born today) age]
+             ;;[(= a age)]
+             ]}
+   63
+   #inst "2013-08-02T00:00:00.000-00:00")
+;; => #{["Alexander Godunov"] ["Sigourney Weaver"] ["Nancy Allen"]}
+
+;; exercise 2: find people younger than bruce willis
+(q '{:find [name age]
+     :in [today]
+     :where [[b :person/name "Bruce Willis"]
+             [b :person/born willis-born]
+             [o :person/name name]
+             [o :person/born other-born]
+             [(learn-xtdb/age willis-born today) willis-age]
+             [(learn-xtdb/age other-born today) age]
+             [(< age willis-age)]]}
+   (java.util.Date.))
+;; => #{["Mel Gibson" 67] ["Nick Stahl" 43] ["Elpidia Carrillo" 61] ["Rae Dawn Chong" 62] ["Edward Furlong" 45] ["Alyssa Milano" 50] ["Linda Hamilton" 66] ["Claire Danes" 43] ["Sophie Marceau" 56] ["Michael Biehn" 66] ["Robert Patrick" 64] ["Jonathan Mostow" 61]}
+
+;;; aggregates
+
+;; exercise 1: count number of movies
+(q '{:find [(count m)]
+     :where [[m :movie/title]]})
+;; => #{[20]}
+
+;; exercise 2: find the oldest person
+(q '{:find [(min date)]
+     :where [[_ :person/born date]]})
+;; => #{[#inst "1926-11-30T00:00:00.000-00:00"]}
+
+;; exercise 3: find the avg rating
+(q '{:find [name (avg rating)]
+     :in [[name ...] [[title rating]]]
+     :where [[p :person/name name]
+             [m :movie/cast p]
+             [m :movie/title title]]}
+   ["Sylvester Stallone" "Arnold Schwarzenegger" "Mel Gibson"]
+   [["Die Hard" 8.3]
+    ["Alien" 8.5]
+    ["Lethal Weapon" 7.6]
+    ["Commando" 6.5]
+    ["Mad Max Beyond Thunderdome" 6.1]
+    ["Mad Max 2" 7.6]
+    ["Rambo: First Blood Part II" 6.2]
+    ["Braveheart" 8.4]
+    ["Terminator 2: Judgment Day" 8.6]
+    ["Predator 2" 6.1]
+    ["First Blood" 7.6]
+    ["Aliens" 8.5]
+    ["Terminator 3: Rise of the Machines" 6.4]
+    ["Rambo III" 5.4]
+    ["Mad Max" 7.0]
+    ["The Terminator" 8.1]
+    ["Lethal Weapon 2" 7.1]
+    ["Predator" 7.8]
+    ["Lethal Weapon 3" 6.6]
+    ["RoboCop" 7.5]])
+;; => #{["Arnold Schwarzenegger" 7.4799999999999995] ["Sylvester Stallone" 6.400000000000001] ["Mel Gibson" 7.200000000000001]}
