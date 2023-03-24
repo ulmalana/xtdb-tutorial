@@ -352,3 +352,74 @@
     ["Lethal Weapon 3" 6.6]
     ["RoboCop" 7.5]])
 ;; => #{["Arnold Schwarzenegger" 7.4799999999999995] ["Sylvester Stallone" 6.400000000000001] ["Mel Gibson" 7.200000000000001]}
+
+;;; rules
+;; abstractions, similar to function. reducing repetition.
+;; example:
+;;
+;; from this:
+;; [p :person/name name]
+;; [m :movie/cast p]
+;; [m :movie/title title]
+;;
+;; to:
+;; [(actor-movie name title)
+;;  [p :person/name name]
+;;  [m :movie/cast p]
+;;  [m :movie/title title]]
+
+;; without rules
+(q '{:find [name]
+     :where [[p :person/name name]
+             [m :movie/cast p]
+             [m :movie/title "The Terminator"]]})
+;; => #{["Michael Biehn"] ["Arnold Schwarzenegger"] ["Linda Hamilton"]}
+
+;; with rules
+(q '{:find [name]
+     :where [(actor-movie name "The Terminator")]
+     :rules [[(actor-movie name title)
+              [p :person/name name]
+              [m :movie/cast p]
+              [m :movie/title title]]]})
+;; => #{["Michael Biehn"] ["Arnold Schwarzenegger"] ["Linda Hamilton"]}
+
+;; same rule name can be used several times to write logical OR
+(q '{:find [name]
+     :where [[m :movie/title "Predator"]
+             (associated-with p m)
+             [p :person/name name]]
+     :rules [[(associated-with person movie)
+              [movie :movie/cast person]]
+             [(associated-with person movie)
+              [movie :movie/director person]]]})
+;; => #{["Carl Weathers"] ["John McTiernan"] ["Elpidia Carrillo"] ["Arnold Schwarzenegger"]}
+
+;; exercise 1: write a rule (movie-year title year)
+(q '{:find [title]
+     :where [(movie-year title 1991)]
+     :rules [[(movie-year title year)
+              [m :movie/year year]
+              [m :movie/title title]]]})
+;; => #{["Terminator 2: Judgment Day"]}
+
+;; exercise 2: write a rules which determine if one person is friend with another (in a mvie)
+(q '{:find [friend]
+     :in [name]
+     :where [[p1 :person/name name]
+             (friends p1 p2)
+             [p2 :person/name friend]]
+     :rules [[(friends ?p1 ?p2)
+              [?m :movie/cast ?p1]
+              [?m :movie/cast ?p2]
+              [(not= ?p1 ?p2)]]
+             [(friends ?p1 ?p2)
+              [?m :movie/cast ?p1]
+              [?m :movie/director ?p2]
+              [(not= ?p1 ?p2)]]
+             [(friends ?p1 ?p2)
+              [?m :movie/director ?p1]
+              [?m :movie/cast ?p2]
+              [(not= ?p1 ?p2)]]]}
+   "Sigourney Weaver")
+;; => #{["Carrie Henn"] ["Tom Skerritt"] ["Ridley Scott"] ["Michael Biehn"] ["Veronica Cartwright"] ["James Cameron"]}
